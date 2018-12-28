@@ -1,3 +1,4 @@
 # Audio Noise Reduction
-Rough example of how to reduce noise from a media file using Fourier transformations. Uses NAudio library.
-Implemented using windows forms
+Rough waveform file noise reduction implementation Fourier transformations in python.
+Implemented in python 3.
+Uses numpy library for FFT and, pyplot for plotting the data.
