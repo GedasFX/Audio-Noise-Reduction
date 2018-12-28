@@ -45,7 +45,7 @@ if __name__ == "__main__":
     pyp.title('Wave dat of %s' % sys.argv[1])
 
     pyp.subplot(413)
-    coef = input("Enter the coefficient 0-2 (default 1) to determine agressiveness of sound clearing: ")
+    coef = input("Enter the critical value 0-2 (default 1) to determine agressiveness of sound clearing: ")
     critical = float(coef) * np.mean(abs(fftdat))
     fftdat[abs(fftdat) < critical] = 0
     pyp.plot(abs(fftdat[:len(fftdat)//2]))
