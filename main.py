@@ -12,33 +12,42 @@ class WavFile:
         self.data = data
         self.params = params
 
-def show_wave_n_spec(speech):
-    spf = wave.open(speech,'r')
+def readInitialAudio(path):
+    print('Started reading file ' + path + '.')
+    spf = wave.open(path,'r')
     f = WavFile(spf.getframerate(), spf.getnchannels(), spf.getsampwidth(), spf.getparams(), np.fromstring(spf.readframes(-1), 'Int16'))
     spf.close()
+    print('Finished reading file.')
+    return f
 
-    # Perform initial FFT
+if __name__ == "__main__":
+    # Read initial waveform audio file
+    f = readInitialAudio(sys.argv[1])
+
+    # Perform initial real FFT
+    print('Started performing FFT.')
     fftdat = np.fft.rfft(f.data)
+    print('Finished FFT.')
 
-    # Collect the x axis for the fourier transform. Results are0 padded and dimentions will not align
+    # Generate the x axis for the fourier transform. Results are 0 padded and dimentions will not align, need to remove the padding
     xfreq = np.delete(np.fft.rfftfreq(fftdat.size, d=1/f.sampleRate), 0)
 
+    pyp.figure(figsize=(10,8))
+
+    print('Plotting the initial data')
     pyp.subplot(411)
     pyp.plot(f.data)
-    pyp.title('Wave from and spectrogram of %s' % sys.argv[1])
+    pyp.title('Wave from of %s' % sys.argv[1])
+    print('Finished protting initial soundfile')
 
     pyp.subplot(412)
-    
-    #meanval = mean(abs(fftraw))
-    meanval = 1e+7
-    print('a')
-    print(len(fftdat)/2)
-    
-    print('b')
     pyp.plot(xfreq, abs(fftdat[:len(fftdat)//2]))
+    pyp.title('Wave dat of %s' % sys.argv[1])
 
     pyp.subplot(413)
-    fftdat[abs(fftdat) < meanval] = 0
+    coef = input("Enter the coefficient 0-2 (default 1) to determine agressiveness of sound clearing: ")
+    critical = float(coef) * np.mean(abs(fftdat))
+    fftdat[abs(fftdat) < critical] = 0
     pyp.plot(abs(fftdat[:len(fftdat)//2]))
 
     pyp.subplot(414)
@@ -52,6 +61,3 @@ def show_wave_n_spec(speech):
     spf.close()
 
     pyp.show()
-
-fil = sys.argv[1]
-show_wave_n_spec(fil)
