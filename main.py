@@ -1,6 +1,5 @@
 import sys
 import wave
-import sounddevice as sd
 import numpy as np
 import matplotlib.pyplot as pyp
 
@@ -13,8 +12,8 @@ class WavFile:
         self.params = params
 
 def readInitialAudio(path):
-    print('Started reading file ' + path + '.')
-    spf = wave.open(path,'r')
+    spf = wave.open(path)
+    print('Started reading file ' + path)
     f = WavFile(spf.getframerate(), spf.getnchannels(), spf.getsampwidth(), spf.getparams(), np.fromstring(spf.readframes(-1), 'Int16'))
     spf.close()
     print('Finished reading file.')
@@ -25,34 +24,41 @@ if __name__ == "__main__":
     f = readInitialAudio(sys.argv[1])
 
     # Perform initial real FFT
-    print('Started performing FFT.')
+    print('Started FFT')
     fftdat = np.fft.rfft(f.data)
-    print('Finished FFT.')
 
     # Generate the x axis for the fourier transform. Results are 0 padded and dimentions will not align, need to remove the padding
     xfreq = np.delete(np.fft.rfftfreq(fftdat.size, d=1/f.sampleRate), 0)
 
     pyp.figure(figsize=(10,8))
+    #pyp.title('Wave from of %s' % sys.argv[1])
 
     print('Plotting the initial data')
     pyp.subplot(411)
     pyp.plot(f.data)
-    pyp.title('Wave from of %s' % sys.argv[1])
-    print('Finished protting initial soundfile')
 
     pyp.subplot(412)
+    print('Plotting the initial Fourier transfrom data')
     pyp.plot(xfreq, abs(fftdat[:len(fftdat)//2]))
     pyp.title('Wave dat of %s' % sys.argv[1])
 
-    pyp.subplot(413)
-    coef = input("Enter the critical value 0-2 (default 1) to determine agressiveness of sound clearing: ")
-    critical = float(coef) * np.mean(abs(fftdat))
+    mv = np.mean(abs(fftdat)) # Mean value of the fourier transform
+    coef = input("Enter the critical value coeficient 0-2 (default 1) to determine agressiveness of sound clearing. Current mean: {0}. ".format(mv))
+
+    # Set the values for below critical to 0
+    critical = float(coef) * mv
+    print('Clearing the background noise')
     fftdat[abs(fftdat) < critical] = 0
+
+    pyp.subplot(413)
+    print('Plotting the new FFT without background noise')
     pyp.plot(abs(fftdat[:len(fftdat)//2]))
 
     pyp.subplot(414)
+    print('Preforming the reverse Fourier transform')
     newdat = np.fft.irfft(fftdat)
     newdat = np.round(newdat).astype('int16')
+    print('Plotting the new soundfile waveform')
     pyp.plot(newdat)
 
     spf = wave.open("rez.wav", 'w')
@@ -61,3 +67,5 @@ if __name__ == "__main__":
     spf.close()
 
     pyp.show()
+
+    print('File saved as rez.wav')
